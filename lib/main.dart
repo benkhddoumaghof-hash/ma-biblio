@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'models/livre.dart';
 import 'data/livres_data.dart';
 import 'screens/parametres_screen.dart';
+import 'screens/catalogue_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,19 +37,39 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('MaBiblio'),
         actions: [
+          // Bouton pour ouvrir le catalogue
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.menu_book),
+            tooltip: 'Catalogue',
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ParametresScreen(),
+                  builder: (context) =>
+                      CatalogueScreen(livres: livres),
+                ),
+              );
+            },
+          ),
+
+          // Bouton pour ouvrir les paramètres
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Paramètres',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const ParametresScreen(),
                 ),
               );
             },
           ),
         ],
       ),
+
+      // Affichage des trois premiers livres sur l'accueil
       body: ListView(
         children: livres.take(3).map((livre) {
           return livreTile(livre);
@@ -57,6 +79,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// Widget réutilisable pour afficher un livre
 Widget livreTile(Livre livre) {
   return ListTile(
     leading: CircleAvatar(
@@ -72,7 +95,10 @@ Widget livreTile(Livre livre) {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(livre.note.toString()),
-        const Icon(Icons.star, color: Colors.amber),
+        const Icon(
+          Icons.star,
+          color: Colors.amber,
+        ),
       ],
     ),
   );
