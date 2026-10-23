@@ -11,28 +11,31 @@ class MaListeScreen extends StatefulWidget {
 }
 
 class _MaListeScreenState extends State<MaListeScreen> {
+  // Q3.2 : filtre des nouveautés
   bool _nouveautesSeulement = false;
 
+  // Q3.3 : les cinq genres réels, tous cochés au départ
   final Map<String, bool> _genres = {
-    'Science': true,
-    'Informatique': true,
+    'Jeunesse': true,
     'Roman': true,
+    'Science': true,
     'Histoire': true,
-    'Fantastique': true,
+    'Informatique': true,
   };
 
+  // Q3.4 : icône adaptée à chaque genre
   IconData _iconeGenre(String genre) {
     switch (genre) {
-      case 'Science':
-        return Icons.science;
-      case 'Informatique':
-        return Icons.computer;
+      case 'Jeunesse':
+        return Icons.child_care;
       case 'Roman':
         return Icons.menu_book;
+      case 'Science':
+        return Icons.science;
       case 'Histoire':
         return Icons.history_edu;
-      case 'Fantastique':
-        return Icons.auto_awesome;
+      case 'Informatique':
+        return Icons.computer;
       default:
         return Icons.book;
     }
@@ -48,7 +51,7 @@ class _MaListeScreenState extends State<MaListeScreen> {
     return null;
   }
 
-  // Q3.7 : filtrage des livres
+  // Q3.7 : filtrer les livres par genre et nouveautés
   List<Livre> get _livresFiltres {
     return livres.where((livre) {
       final genreSelectionne = _genres[livre.genre] ?? false;
@@ -62,17 +65,20 @@ class _MaListeScreenState extends State<MaListeScreen> {
   @override
   Widget build(BuildContext context) {
     final livresAffiches = _livresFiltres;
-    final nombreLus = livresAffiches.where((livre) => livre.lu).length;
+    final nombreLus =
+        livresAffiches.where((livre) => livre.lu).length;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Lus : $nombreLus / ${livresAffiches.length}'),
       ),
-      body: ListView(
+      body: Column(
         children: [
           // Q3.2 : filtre des nouveautés
           CheckboxListTile(
-            title: const Text('Afficher uniquement les nouveautés'),
+            title: const Text(
+              'Afficher uniquement les nouveautés',
+            ),
             value: _nouveautesSeulement,
             activeColor: Colors.teal,
             controlAffinity: ListTileControlAffinity.leading,
@@ -83,9 +89,9 @@ class _MaListeScreenState extends State<MaListeScreen> {
             },
           ),
 
-          const Divider(),
+          const Divider(height: 1),
 
-          // Q3.6 : sélection de tous les genres
+          // Q3.6 : tous les genres
           CheckboxListTile(
             title: const Text('Tous les genres'),
             tristate: true,
@@ -105,8 +111,9 @@ class _MaListeScreenState extends State<MaListeScreen> {
 
           // Q3.3 à Q3.5 : cases des genres
           ..._genres.keys.map((genre) {
-            final nombreLivres =
-                livres.where((livre) => livre.genre == genre).length;
+            final nombreLivres = livres
+                .where((livre) => livre.genre == genre)
+                .length;
 
             return CheckboxListTile(
               title: Text(genre),
@@ -123,67 +130,53 @@ class _MaListeScreenState extends State<MaListeScreen> {
             );
           }),
 
-          const Divider(),
+          const Divider(height: 1),
 
-          // Q3.7 : affichage des livres avec séparateurs
-          ..._construireListeLivres(livresAffiches),
+          // Q3.7 : vraie liste séparée, filtrée
+          Expanded(
+            child: ListView.separated(
+              itemCount: livresAffiches.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(indent: 72, height: 1),
+              itemBuilder: (context, index) {
+                final livre = livresAffiches[index];
+
+                return CheckboxListTile(
+                  value: livre.lu,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  secondary: CircleAvatar(
+                    backgroundColor: livre.couleur,
+                    child: Text(
+                      livre.titre.isNotEmpty
+                          ? livre.titre[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    livre.titre,
+                    style: TextStyle(
+                      decoration: livre.lu
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${livre.auteur} - ${livre.annee}',
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      livre.lu = value ?? false;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  List<Widget> _construireListeLivres(List<Livre> livresAffiches) {
-    if (livresAffiches.isEmpty) {
-      return [
-        const Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(
-            child: Text('Aucun livre ne correspond aux filtres.'),
-          ),
-        ),
-      ];
-    }
-
-    final widgets = <Widget>[];
-
-    for (final livre in livresAffiches) {
-      widgets.add(
-        CheckboxListTile(
-          value: livre.lu,
-          controlAffinity: ListTileControlAffinity.leading,
-          secondary: CircleAvatar(
-            backgroundColor: livre.couleur,
-            child: Text(
-              livre.titre.isNotEmpty ? livre.titre[0] : '?',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          title: Text(
-            livre.titre,
-            style: TextStyle(
-              decoration: livre.lu
-                  ? TextDecoration.lineThrough
-                  : TextDecoration.none,
-            ),
-          ),
-          subtitle: Text('${livre.auteur} – ${livre.annee}'),
-          onChanged: (value) {
-            setState(() {
-              livre.lu = value ?? false;
-            });
-          },
-        ),
-      );
-    }
-
-    return List<Widget>.generate(
-      widgets.length * 2 - 1,
-      (index) {
-        if (index.isOdd) {
-          return const Divider(indent: 72, height: 1);
-        }
-        return widgets[index ~/ 2];
-      },
     );
   }
 }
